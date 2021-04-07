@@ -30,7 +30,7 @@ An example use-case might be controlling multiple industrial robots where timing
 Features
 --------
 
-* Supports multiple backends (Currently implemented: Redis)
+* Uses Redis as a backend
 * About 1ms precision (see docs.)
 * Synchronize events based on system clock (NTP is a must have)
 

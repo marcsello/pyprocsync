@@ -2,13 +2,14 @@ Welcome to PyProcSync's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    readme
    installation
    usage
-   modules
+   principle
+   source/classes
    contributing
    authors
    history

@@ -47,8 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PyProcSync'
-copyright = "2021, Pünkösd Marcell"
-author = "Pünkösd Marcell"
+copyright = "2021, Marcell Pünkösd"
+author = "Marcell Pünkösd"
 
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -129,7 +129,7 @@ latex_elements = {
 latex_documents = [
     (master_doc, 'pyprocsync.tex',
      'PyProcSync Documentation',
-     'Pünkösd Marcell', 'manual'),
+     'Marcell Pünkösd', 'manual'),
 ]
 
 
@@ -158,5 +158,5 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
+# Fix showing the docstring in __init__
+autoclass_content = 'both'
