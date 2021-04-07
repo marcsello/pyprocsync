@@ -1,4 +1,3 @@
-"""Main module."""
 from typing import Optional
 import time
 import redis
@@ -6,17 +5,28 @@ import struct
 
 from .exceptions import TooLateError, TimeOutError
 
+"""
+This is the main module of PyProcSync.
+"""
+
 
 class ProcSync:
     """
+    PyProcSync main class.
 
+    An instance of class represents a single "run" with their own Redis connection.
+    Each synchronization point (`sync()` calls) is tied to the context of a ProcSync instance with an unique `run_id`.
     """
 
     def __init__(self, redis_client: redis.Redis, run_id: str = "", delay: float = 1.0):
         """
+        Upon creation the appropriate channel is being subscribed to.
+
+        Although the `run_id` is optional it is strongly recommended to be set to a different value at each creation.
+        The `run_id` must be the same on all nodes that takes part of the same "run".
 
         :param redis_client: A `redis.Redis` instance that's connected to a redis server.
-        :param run_id: An arbitrary id (str) that identifies this specific run. (Should be unique across all runs)
+        :param run_id: An arbitrary id (str) that identifies this specific run. (Should be unique across all runs and the same on all nodes)
         :param delay: Time spent waiting after the continue time is announced. (Default is 1 sec)
         """
 

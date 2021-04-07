@@ -1,3 +1,8 @@
+"""
+This module contains all custom exceptions raised by PyProcSync.
+"""
+
+
 class ProcSyncError(BaseException):
     """
     Base class for all exceptions in PyProcSync.
@@ -15,6 +20,7 @@ class TooLateError(ProcSyncError):
 
 class TimeOutError(ProcSyncError):
     """
-    This exception is raised
+    This exception is raised when the node is gave up waiting for other nodes.
+    This could caused by other nodes crashed or bad configuration.
     """
     pass
