@@ -19,7 +19,7 @@ PyProcSync
 Synchronize events between processes over the network.
 This package provides similar behaviour as Python's `threading.Event` but it is designed to be used with multiple processes running on different computers.
 
-An example use-case might be controlling multiple industrial robots where timing is critical.
+An example use-case might be controlling multiple industrial robots handling anomalous materials, where timing is critical.
 
 
 * Free software: MIT license
@@ -31,11 +31,26 @@ Features
 --------
 
 * Uses Redis as a backend
-* About 1ms precision (see docs.)
+* About 1ms precision (see. `perf_tests`)
 * Synchronize events based on system clock (NTP is a must have)
+* Synchronize unlimited number of nodes with the same precision (Depends on the performance of Redis cluster)
 
 Example
---------
+-------
+
+Simple example that synchronizes 4 nodes::
+
+    import redis
+    from pyprocsync import ProcSync
+
+    p = ProcSync(redis.from_url('redis://localhost:6379/0'))
+
+    # Do some work
+
+    p.sync("first", 4) # Block until all 4 nodes are reached the synchronization point
+
+    # Time sensitive work
+
 
 
 Credits
