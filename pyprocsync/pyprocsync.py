@@ -20,7 +20,7 @@ class ProcSync:
         :param delay: Time spent waiting after the continue time is announced. (Default is 1 sec)
         """
 
-        if type(delay) not in [float, int] or delay <= 0 :
+        if type(delay) not in [float, int] or delay <= 0:
             raise ValueError("delay parameter must be a positive float")
 
         self._delay = delay
@@ -75,7 +75,7 @@ class ProcSync:
         if (type(nodes) is not int) or (nodes <= 0):
             raise ValueError("nodes parameter must be a positive integer!")
 
-        if timeout and (type(timeout) not in [int, float] or timeout <= 0 ):
+        if timeout and (type(timeout) not in [int, float] or timeout <= 0):
             raise ValueError("timeout parameter must be a positive float!")
 
         if (not event_name) or (type(event_name) is not str):
