@@ -67,7 +67,7 @@ class ProcSync:
         else:
             deadline = None
 
-        if self._redis_client.incr(nodewait_key) >= nodes:
+        if self._redis_client.incr(nodewait_key) == nodes:
             # this was the last node, announcing continue time
             cont_time = time.time() + self._delay  # each client have _delay seconds to receive sync time and prepare
 
