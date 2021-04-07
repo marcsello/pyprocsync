@@ -64,9 +64,9 @@ class ProcSync:
 
         # waiting for continue time to be announced (this will consume the message emitted above as well)
         while True:
-            cont_message = self._redis_pubsub.get_message(ignore_subscribe_messages=True, timeout=0.1)
-            if cont_message and cont_message['channel'] == continue_channel:
-                cont_time = struct.unpack("!d", cont_message['data'])[0]  # Using struct is a lot faster than strings
+            message = self._redis_pubsub.get_message(ignore_subscribe_messages=True, timeout=0.1)
+            if message and message['channel'] == continue_channel:
+                cont_time = struct.unpack("!d", message['data'])[0]  # Using struct is a lot faster than strings
                 break
 
         self._sleep_until(cont_time)
