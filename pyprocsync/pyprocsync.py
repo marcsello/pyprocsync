@@ -1,4 +1,5 @@
 """Main module."""
+from typing import Optional
 import time
 import redis
 import struct
@@ -19,7 +20,7 @@ class ProcSync:
         :param delay: Time spent waiting after the continue time is announced. (Default is 1 sec)
         """
 
-        if delay <= 0 or type(delay) not in [float, int]:
+        if type(delay) not in [float, int] or delay <= 0 :
             raise ValueError("delay parameter must be a positive float")
 
         self._delay = delay
@@ -46,7 +47,7 @@ class ProcSync:
                 Try increasing delay."""
             )
 
-    def sync(self, event_name: str, nodes: int, timeout: float = None):
+    def sync(self, event_name: str, nodes: int, timeout: Optional[float] = None):
         """
         Start waiting for each node (number of nodes specified by `nodes` parameter) to arrive at
         the synchronization point specified by `event_name`.
@@ -71,11 +72,14 @@ class ProcSync:
         # Do preparations before increasing the counter to
         # minimize time spent between announcing and waiting for announcement
 
-        if nodes <= 0 or type(nodes) is not int:
+        if (type(nodes) is not int) or (nodes <= 0):
             raise ValueError("nodes parameter must be a positive integer!")
 
-        if timeout and (timeout <= 0 or type(timeout) not in [int, float]):
+        if timeout and (type(timeout) not in [int, float] or timeout <= 0 ):
             raise ValueError("timeout parameter must be a positive float!")
+
+        if (not event_name) or (type(event_name) is not str):
+            raise ValueError("event_name must be a non-empty string")
 
         nodewait_key = (self._nodewait_key_prefix + event_name).encode()
         continue_channel = (self._continue_channel_prefix + event_name).encode()
