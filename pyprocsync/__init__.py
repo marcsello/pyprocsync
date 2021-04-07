@@ -5,4 +5,4 @@ __email__ = 'punkosdmarcell@rocketmail.com'
 __version__ = '0.1.0'
 
 from .pyprocsync import ProcSync
-from .exceptions import ProcSyncError, TooLateError
+from .exceptions import ProcSyncError, TooLateError, TimeOutError
