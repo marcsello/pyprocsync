@@ -18,6 +18,10 @@ class ProcSync:
         :param run_id: An arbitrary id (str) that identifies this specific run. (Should be unique across all runs)
         :param delay: Time spent waiting after the continue time is announced. (Default is 1 sec)
         """
+
+        if delay <= 0 or type(delay) not in [float, int]:
+            raise ValueError("delay parameter must be a positive float")
+
         self._delay = delay
         self._nodewait_key_prefix = f"nodewait:{run_id}:"
         self._continue_channel_prefix = f"continue:{run_id}:"
@@ -59,6 +63,13 @@ class ProcSync:
         """
         # Do preparations before increasing the counter to
         # minimize time spent between announcing and waiting for announcement
+
+        if nodes <= 0 or type(nodes) is not int:
+            raise ValueError("nodes parameter must be a positive integer!")
+
+        if timeout and (timeout <= 0 or type(timeout) not in [int, float]):
+            raise ValueError("timeout parameter must be a positive float!")
+
         nodewait_key = (self._nodewait_key_prefix + event_name).encode()
         continue_channel = (self._continue_channel_prefix + event_name).encode()
 
@@ -66,6 +77,8 @@ class ProcSync:
             deadline = time.time() + timeout
         else:
             deadline = None
+
+        # The real deal
 
         if self._redis_client.incr(nodewait_key) == nodes:
             # this was the last node, announcing continue time
