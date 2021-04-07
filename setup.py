@@ -42,6 +42,11 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/marcsello/pyprocsync',
+    project_urls={
+        "Documentation": "https://pyprocsync.readthedocs.io/",
+        "Code": "https://github.com/marcsello/pyprocsync",
+        "Issue tracker": "https://github.com/marcsello/pyprocsync/issues",
+    },
     version='0.1.0',
     zip_safe=False,
 )
