@@ -3,7 +3,7 @@ import time
 import redis
 import struct
 
-from .exceptions import TooLateError
+from .exceptions import TooLateError, TimeOutError
 
 
 class ProcSync:
@@ -37,22 +37,35 @@ class ProcSync:
             time.sleep(timestamp - time.time())  # TODO: use a precision timer
         except ValueError:  # sleep length must be non-negative error
             raise TooLateError(
-                """Syncronization time have already expired.
+                """Synchronization time have already expired.
                 This could be caused by high network latency or unsynchronized system clocks.
                 Try increasing delay."""
             )
 
-    def sync(self, event_name: str, nodes: int):
+    def sync(self, event_name: str, nodes: int, timeout: float = None):
         """
-        Start waiting for a syncronize
+        Start waiting for each node (number of nodes specified by `nodes` parameter) to arrive at
+        the synchronization point specified by `event_name`.
 
-        The function returns at the same time (according to system clock) on all nodes.
+        WARNING: All parameters of this method MUST BE the same on every node for the same event (including timeout).
+        If parameters supplied for this method differ from other nodes, this would not only cause malfunction
+        in the current instance but would confuse other nodes waiting for this synchronization point as well!
 
-        :param event_name: The name of the event. This should be the same across all nodes that want to synchronize.
+        If configured properly, this method returns at the same time (according to their system clock) on all nodes.
+
+        :param event_name: The name of the event. This is the same across all nodes that want to synchronize.
         :param nodes: Amount of nodes to sync the event between.
+        :param timeout: Maximum time to wait for all nodes to reach the synchronization point defined by event_name in seconds. Set to `None` for infinite wait time. TimeOutError raised when the timeout expire.
         """
+        # Do preparations before increasing the counter to
+        # minimize time spent between announcing and waiting for announcement
         nodewait_key = (self._nodewait_key_prefix + event_name).encode()
         continue_channel = (self._continue_channel_prefix + event_name).encode()
+
+        if timeout:
+            deadline = time.time() + timeout
+        else:
+            deadline = None
 
         if self._redis_client.incr(nodewait_key) >= nodes:
             # this was the last node, announcing continue time
@@ -62,13 +75,28 @@ class ProcSync:
             self._redis_client.publish(continue_channel, struct.pack("!d", cont_time))
             self._redis_client.expire(nodewait_key, int(self._delay) + 1)  # Rounding up without ceil()
 
+        elif timeout:
+            # Extend the lifetime to the life of the counter to the maximum timeout
+            # Since every node calls this, then the timeout will always reflect the last node's timeout
+            # Part of the reason why the timeout must be the same on all nodes
+            self._redis_client.expire(nodewait_key, int(timeout) + 1)
+
         # waiting for continue time to be announced (this will consume the message emitted above as well)
         while True:
             message = self._redis_pubsub.get_message(ignore_subscribe_messages=True, timeout=0.1)
+
             if message and message['channel'] == continue_channel:
                 cont_time = struct.unpack("!d", message['data'])[0]  # Using struct is a lot faster than strings
                 break
 
+            if deadline and time.time() > deadline:
+                raise TimeOutError(
+                    """Time out while waiting for all nodes to synchronize.
+                    Is it possible that one of the nodes crashed, or did not reach the synchronization point in time.
+                    Try increasing the deadline, or set it to None for infinite wait time."""
+                )
+
+        # Each node should sleep until the timestamp they agreed on
         self._sleep_until(cont_time)
 
     def close(self):

@@ -11,3 +11,10 @@ class TooLateError(ProcSyncError):
     That could be caused by high network latency or unsynchronized system clocks between nodes.
     """
     pass
+
+
+class TimeOutError(ProcSyncError):
+    """
+    This exception is raised
+    """
+    pass
