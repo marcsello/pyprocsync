@@ -57,6 +57,13 @@ class ProcSync:
 
         If configured properly, this method returns at the same time (according to their system clock) on all nodes.
 
+        Exceptions this method may raise:
+          - ValueError: Some parameters are invalid.
+          - pyprocsync.TooLateError: Synchronization time already expired when recieved (system clocks not in sync or configured delay lower than network latency)
+          - pyprocsync.TimeOutError: (only when timeout is not none) Given up waiting for other nodes.
+          - AssertionError: Unexpected values read from Redis.
+          - Redis related exceptions (see. pyredis docs).
+
         :param event_name: The name of the event. This is the same across all nodes that want to synchronize.
         :param nodes: Amount of nodes to sync the event between.
         :param timeout: Maximum time to wait for all nodes to reach the synchronization point defined by event_name in seconds. Set to `None` for infinite wait time. TimeOutError raised when the timeout expire.
@@ -79,8 +86,9 @@ class ProcSync:
             deadline = None
 
         # The real deal
+        nodes_waiting = self._redis_client.incr(nodewait_key)
 
-        if self._redis_client.incr(nodewait_key) == nodes:
+        if nodes_waiting == nodes:
             # this was the last node, announcing continue time
             cont_time = time.time() + self._delay  # each client have _delay seconds to receive sync time and prepare
 
@@ -88,11 +96,18 @@ class ProcSync:
             self._redis_client.publish(continue_channel, struct.pack("!d", cont_time))
             self._redis_client.expire(nodewait_key, int(self._delay) + 1)  # Rounding up without ceil()
 
-        elif timeout:
-            # Extend the lifetime to the life of the counter to the maximum timeout
-            # Since every node calls this, then the timeout will always reflect the last node's timeout
-            # Part of the reason why the timeout must be the same on all nodes
-            self._redis_client.expire(nodewait_key, int(timeout) + 1)
+        elif nodes_waiting > nodes:
+            raise AssertionError(
+                """The number nodes currently waiting for this event is higher than the nodes attribute!
+                This could be caused by the run_id being reused between runs or the nodes parameter may be inconsistent between nodes"""
+            )
+
+        else:  # nodes_waiting < nodes
+            if timeout:
+                # Extend the lifetime to the life of the counter to the maximum timeout
+                # Since every node calls this, then the timeout will always reflect the last node's timeout
+                # Part of the reason why the timeout must be the same on all nodes
+                self._redis_client.expire(nodewait_key, int(timeout) + 1)
 
         # waiting for continue time to be announced (this will consume the message emitted above as well)
         while True:
